@@ -11,10 +11,13 @@ From mathcomp Require Import topology normedtype landau derive.
 (**md**************************************************************************)
 (* # Formalization of LaSalle's invariance principle                          *)
 (*                                                                            *)
+(* `limS sol A`                                                               *)
+(* : omega-limit set for A                                                    *)
+(*                                                                            *)
 (* `is_invariant A`                                                           *)
 (* : the set `A` is invariant                                                 *)
 (*                                                                            *)
-(* `symemtric_sol y`                                                          *)
+(* `shifted_odd y`                                                            *)
 (* : the function y is symmetric w.r.t. its initial value                     *)
 (*                                                                            *)
 (* `is_sol phi y`                                                             *)
@@ -266,11 +269,11 @@ Local Open Scope ring_scope.
 
 Section definitions_to_apply_LaSalle.
 
-Definition symmetric_sol (y : R -> U) :=
-  forall t, t < 0 -> y t = 2 *: (y 0) - (y (- t)).
+Definition shifted_odd (y : R -> U) :=
+  forall t, t < 0 -> y t = 2 *: y 0 - y (- t).
 
-Definition is_sol (y : R -> U) := symmetric_sol y /\
-  forall t, 0 <= t -> is_derive (t : R^o) 1 y (phi (y t)).
+Definition is_sol (y : R -> U) := shifted_odd y /\
+  (forall t, 0 <= t -> is_derive (t : R^o) 1 y (phi (y t))).
 
 (* K: compact set used in LaSalle's invariance principle *)
 (* sol: solution function *)
@@ -307,9 +310,7 @@ Lemma sol_shift (H : hypos) (sol := sol H) p (t0 : R^o) : K H p -> (0 <= t0)%R -
   is_sol (shift_sol sol p t0).
 Proof.
 move=> Kp t0ge0; split=> [t tlt0|t tge0].
-  rewrite /shift_sol leNgt tlt0/= lexx/=.
-  rewrite ltW ?oppr_gt0//.
-  rewrite [X in _ = (2 *: sol p X - _)%R](_ : _ = t0)//.
+  rewrite /shifted_odd /shift_sol leNgt tlt0/= lexx/= ltW ?oppr_gt0//.
   by rewrite add0r.
 suff dshift : (shift_sol sol p t0) \o shift t = (cst (shift_sol sol p t0 t) +
   (fun h : R^o => h *: phi (shift_sol sol p t0 t)))%R +o_ (0%R : R^o) (id : R^o -> R^o).
@@ -324,7 +325,7 @@ suff dshift : (shift_sol sol p t0) \o shift t = (cst (shift_sol sol p t0 t) +
       congr +%R.
       abstract: dshiftE.
       have lin_scal : linear (fun h : R^o => h *: phi (shift_sol sol p t0 t))%R.
-        by move=> ???; rewrite scalerDl scalerA.
+        by move=> ? ? ?; rewrite scalerDl scalerA.
       pose glM := GRing.isLinear.Build _ _ _ _ _ lin_scal.
       pose gL : {linear R^o -> U} := HB.pack ( *:%R^~ (phi (shift_sol sol p t0 t))) glM.
       have -> : (fun h : R^o => h *: phi (shift_sol sol p t0 t))%R = gL by [].

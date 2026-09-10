@@ -294,11 +294,9 @@ Qed.
 End about_Lyapunov_function.
 
 Section Lyapunov_stability.
-Context {R : realType} {n} (U := 'rV[R]_n.+1).
-Variable phi : U -> U.
-Variable A : set U.
+Context {R : realType} {n} (U := 'rV[R]_n.+1) (phi : U -> U)
+  (A Init : set U).
 Hypothesis openA : open A.
-Variable Init : set U.
 
 Let B r := closed_ball_ (fun x => `|x|) (0 : 'rV[R]_n.+1) r.
 
@@ -580,11 +578,12 @@ End is_equilibrium_point_change_of_variables.
 
 Section Lyapunov_stability.
 Context {R : realType} {n} (U := 'rV[R]_n.+1) (phi : U -> U)
-  (A : set U) (Init : set U) (V : U -> R).
+  (A Init : set U) (V : U -> R).
 
 Hypothesis openA : open A.
 
 Hypothesis Vdiff : forall t, differentiable V t.
+
 Hypothesis V'_le0 : forall D f,
   f 0 \in Init ->
   is_sol_cauchy_oo (fun=> phi) 0 D (f 0) f ->

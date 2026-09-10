@@ -129,13 +129,6 @@ apply: (@continuous_comp _ _ _ (fun x0 : 'rV[K^o]_6 => 'e_2 - Right x0)).
 exact: continuous_enorm.
 Qed.
 
-Lemma compact_Upsilon1 : compact (@Tilt.Upsilon1 K).
-Proof.
-rewrite /Tilt.Upsilon1.
-(* TODO: I think we already proved that inside a proof *)
-Abort.
-
-
 Let tilt_solP' y0 : y0 \in Tilt.Upsilon1 ->
   exists2 sol, is_sol_cauchy (fun=> phi) 0 +oo%O y0 sol &
                (h^-1 *: (sol h - sol 0)) @[h --> 0^'+] --> phi (sol 0).
@@ -146,39 +139,37 @@ suff [sol [solP2 solP1]] : exists2 sol,
     (h^-1 *: (sol (0 + h) - sol 0)) @[h --> 0^'+] --> phi (sol 0).
   move : solP2; under eq_fun do rewrite add0r; move=>solP2.
   by exists sol.
-have phi_cont : (forall x, continuous ((fun (t: K) => phi)^~ x)).
-  by move=>x;exact: cst_continuous.
-have contained :  forall b sol,
+have phi_cont x : continuous ((fun t : K => phi)^~ x) by exact: cst_continuous.
+have contained b sol :
         is_sol_cauchy_oo (fun => phi) 0 b y0 sol ->
         [set sol x | x in `[0, b[] `<=` (@sublevelV1Upsilon1 y0).
-  move=> t y' [init [solp cont]] y1 [t0 /= t0t <-].
+  move=> [init [solp cont]] y1 [t0 /= t0t <-].
   split; last first.
     apply/(@tilt_reachable_setS  _ alpha1 gamma).
-    exists y', t; split; rewrite ?init//=.
+    exists sol, b; split; rewrite ?init//=.
     by exists t0.
   rewrite /sublevelV1 /sublevel/=.
   rewrite -init.
-  apply: (@V_nincr _ _ t) => /=.
+  apply: (@V_nincr _ _ b) => /=.
   - by move=> t' itvt'; apply solp.
   - apply/continuous_subspaceW/cont.
     rewrite closure_itvoo; first by rewrite (itvP t0t).
     by apply: subset_itvl; rewrite bnd_simp.
   - exact: V1_diff.
-  - apply: (@derive_along_V1_le0 _ _ _ _ _ t) => //.
+  - apply: (@derive_along_V1_le0 _ _ _ _ _ b) => //.
     by rewrite init.
   by move=> t1 t1t; apply/derivable1_diffP; apply solp.
   - by rewrite (itvP t0t).
   - by rewrite (itvP t0t) lexx.
 have phi_loc_lip  : forall b, 0 < b ->
   forall x, exists r k : {posnum K},
-    {in `[0, b]%R, forall (t : K), k%:num.-lipschitz_(closed_ball x r%:num) ((fun => phi) t)}.
+    {in `[0, b]%R, forall (t : K), k%:num.-lipschitz_(closed_ball x r%:num) ((fun=> phi) t)}.
   move=> b b0 y1.
   have [r [k y0r]] := @tilt_eqn_locally_lipschitz K alpha1 _ gamma_gt0 y1.
   by exists r, k.
 exists (global_sol (@compact_sublevelV1Upsilon1 y0) phi_cont phi_loc_lip contained).
-exact : compact_is_sol_cauchy_infty.
-apply : compact_sol_right_derivable.
-exact/mem_sublevelV1Upsilon1/set_mem.
+  exact: compact_is_sol_cauchy_infty.
+exact/compact_sol_right_derivable/mem_sublevelV1Upsilon1/set_mem.
 Qed.
 
 (* NB: this is the first part of the hypotheses to apply LaSalle's invariance principle *)
@@ -192,9 +183,7 @@ have /choice [sol0 sol0P] : forall y0, exists sol, sol 0 = y0 /\
   have [|y01] := boolP (y0 \in Tilt.Upsilon1); last by exists (cst y0).
   move/tilt_solP' => [sol [sol0 solp solpr]].
   by exists sol.
-set sol := fun y0 t =>
-  if t < 0 then 2 *: y0 - sol0 y0 (- t)
-  else sol0 y0 t.
+pose sol y0 t := if t < 0 then 2 *: y0 - sol0 y0 (- t) else sol0 y0 t.
 exists sol.
   move => p.
   rewrite /sol ltxx.
