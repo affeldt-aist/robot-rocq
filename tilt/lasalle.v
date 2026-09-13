@@ -11,6 +11,10 @@ From mathcomp Require Import topology normedtype landau derive.
 (**md**************************************************************************)
 (* # Formalization of LaSalle's invariance principle                          *)
 (*                                                                            *)
+(* The contents of this file are essentially coming from                      *)
+(* https://github.com/drouhling/LaSalle                                       *)
+(* with only minor changes.                                                   *)
+(*                                                                            *)
 (* `limS sol A`                                                               *)
 (* : omega-limit set for A                                                    *)
 (*                                                                            *)
@@ -207,7 +211,7 @@ rewrite lerBrDr addrC -lerBrDr; apply: ybndN; last by exists t.
 by rewrite ltrBrDr; near: M; exists (N + N)%R; rewrite realD.
 Unshelve. all: by end_near. Qed.
 
-(* TODO: update lasalle on github *)
+(* TODO: mv *)
 Lemma nearN (R : realFieldType) (P : set R) :
   (\forall x \near (0%R : R^o), P x) = (\forall x \near (0%R : R^o), P (- x)%R).
 Proof.
@@ -234,7 +238,6 @@ exists e%:num%R=> //= q [r plimr re_q].
 by apply: limSeB; exists r => //; exists p.
 Qed.
 
-(* TODO: mv *)
 Lemma nincr_lb_cvg {R : realType} (f : R -> R) :
   (forall x y, 0 <= x <= y -> f y <= f x)%R ->
   (exists M, f @` (>= 0)%R `<=` (> M)%R) -> cvg (f @ +oo%R).
@@ -295,13 +298,6 @@ Section theory_of_hypos.
 
 Lemma sol_is_sol (H : hypos) (p : U) : K H p -> is_sol (sol H p).
 Proof. by move=> Kp; apply/(@solP_sol H); rewrite sol0. Qed.
-
-(* NB: not used *)
-Lemma uniq_sol (H : hypos) (x y : R -> U) : K H (x 0) -> K H (y 0) ->
-  is_sol x -> is_sol y -> x 0 = y 0 -> x = y.
-Proof.
-by move=> Kx0 Ky0 /(solP_sol Kx0)-> /(solP_sol Ky0)->; rewrite !sol0 => ->.
-Qed.
 
 Definition shift_sol (sol : U -> R -> U) p t0 t :=
   (if t >= 0 then sol p (t + t0) else 2 *: (sol p t0) - (sol p (- t + t0)))%R.

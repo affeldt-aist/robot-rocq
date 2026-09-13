@@ -146,7 +146,6 @@ rewrite image_comp/=; congr (sup _).
 apply: eq_imagel => z Kz /=; rewrite -normrMn /=.
 have /(congr1 (@^~ z)) <- := natmulfctE f n.
 congr (normr (_ z)).
-(* NB: investigate *)
 elim: n f => //= n IH f.
 by rewrite !mulrS -IH.
 Qed.
@@ -169,23 +168,6 @@ Import Quotient.
 
 Section contSeg_quotient.
 Context {R : realType} (a b : R) {W : normedModType R}.
-
-(*Definition eq_seg (f g : continuousSubspaceType a b) := `[< {in `[a, b], f =1 g} >].
-
-Let eq_seg_refl : reflexive eq_seg.
-Proof. by move=> f; apply/asboolP => r. Qed.
-
-Let eq_seg_sym : symmetric eq_seg.
-Proof. by move=> f g; apply/idP/idP => /asboolP h; apply/asboolP => r /h. Qed.
-
-(* TODO: wait for quotient *)
-Let eq_seg_trans : transitive eq_seg.
-Proof.
-by move=> f g h /asboolP fg /asboolP gh; apply/asboolP => r rab; rewrite fg// gh.
-Qed.
-
-Canonical eq_seg_canonical :=
-  EquivRel eq_seg eq_seg_refl eq_seg_sym eq_seg_trans.*)
 
 Local Open Scope quotient_scope.
 
@@ -353,7 +335,6 @@ apply/propext; split => [[x1 in_itv] | [x1 in_itv]] H; exists x1 =>//.
   by rewrite -normrN.
 by rewrite normrN.
 Qed.
-(* TODO: dev the theory of sup following the theory of ess_sup *)
 
 Fail Check `C[a, b] : normedZmodType R.
 
@@ -430,7 +411,6 @@ HB.instance Definition _ := is_normZmod_contFunBallType.
 
 Check `C([r, s] W) : PseudoMetricNormedZmod0.type R.
 
-(* NB: new since MCA 1.17.0 *)
 HB.instance Definition _ := isPseudoMetricNormedZmodule.Build R `C([r, s] W).
 
 Check `C([r, s] W) : pseudoMetricNormedZmodType R.

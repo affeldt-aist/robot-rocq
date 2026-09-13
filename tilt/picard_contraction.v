@@ -7,8 +7,7 @@ From mathcomp Require Import topology tvs normedtype.
 From mathcomp Require Import landau ereal sequences derive numfun measure.
 From mathcomp Require Import realfun measurable_realfun lebesgue_measure.
 From mathcomp Require Import lebesgue_integral ftc.
-Require Import tilt_mathcomp tilt_analysis vector_integral ode_common
-  ode_contseg.
+Require Import tilt_analysis vector_integral ode_common ode_contseg.
 
 (**md**************************************************************************)
 (*                                                                            *)
@@ -53,30 +52,6 @@ Import numFieldNormedType.Exports.
 
 Open Scope ring_scope.
 Open Scope classical_set_scope.
-
-(* TODO: move *) (* NB: not useful any more?! *)
-(*Definition measure_rV_display : measure_display -> measure_display.
-Proof. exact. Qed.
-
-Section measurable_rV.
-Context {d} {T : sigmaRingType d} (n : nat).
-
-Let coors : 'I_n -> 'rV[T]_n -> T := fun i x => x 0 i.
-
-Let rV_set0 : g_sigma_preimage coors set0.
-Proof. exact: sigma_algebra0. Qed.
-
-Let rV_setC A : g_sigma_preimage coors A -> g_sigma_preimage coors (~` A).
-Proof. exact: sigma_algebraC. Qed.
-
-Let rV_bigcup (F : _^nat) : (forall i, g_sigma_preimage coors (F i)) ->
-  g_sigma_preimage coors (\bigcup_i (F i)).
-Proof. exact: sigma_algebra_bigcup. Qed.
-
-HB.instance Definition _ := @isMeasurable.Build (measure_rV_display d)
-  'rV[T]_n (g_sigma_preimage coors) rV_set0 rV_setC rV_bigcup.
-
-End measurable_rV.*)
 
 HB.lock Definition sup_ODE {R : realType} {n : nat}
   (U := 'rV[R]_n) (phi : R -> U -> U) (a b : R) (u0 : U)

@@ -2,9 +2,8 @@ From HB Require Import structures.
 From mathcomp Require Import boot order algebra ring_tactic interval_inference.
 From mathcomp Require Import boolp classical_sets functions reals order
   topology normedtype landau sequences derive realfun matrix_normedtype.
-Require Import ssr_ext euclidean rigid frame skew derive_matrix.
-Require Import tilt_mathcomp tilt_analysis tilt_robot.
-Require Import ode_local tilt_stability.
+From robot Require Import ssr_ext euclidean rigid frame skew derive_matrix.
+Require Import tilt_analysis tilt_robot ode_local tilt_stability.
 
 (**md**************************************************************************)
 (* # Formalization of [benallegue2023itac] (1/2)                              *)
@@ -397,8 +396,7 @@ Hypotheses (gamma_gt0 : 0 < gamma) (alpha1_gt0 : 0 < alpha1).
 Local Notation Left := (@lsubmx _ 1 3 3).
 Local Notation Right := (@rsubmx _ 1 3 3).
 
-(* TODO: rename *)
-Lemma tilt_eqn_locally_lipschitz_new x (r : R) :
+Lemma tilt_eqn_locally_lipschitz x (r : R) :
  exists k : {posnum R}, k%:num.-lipschitz_(closed_ball x r) phi.
 Proof.
 have [r0|r0] := ltP 0 r; last first.
@@ -430,7 +428,6 @@ rewrite ge_max; apply/andP; split.
       by apply: closed_ball_bounded => //.
     rewrite (le_trans (lsubmx_norm_le _))//.
     exact: closed_ball_bounded.
-  (* todo: find some bound and show *)
   have sbound x' : closed_ball x r x' ->  `|'e_2 - Right x'| <= (1 + r)+`|x|.
     move=> cb.
     rewrite (le_trans (ler_normB _ _))//.
@@ -484,12 +481,8 @@ rewrite ge_max; apply/andP; split.
     by rewrite !mulrA ler_pM// !mulr_ge0// ?addr_ge0// ltW.
 Unshelve. all: by end_near. Qed.
 
-Lemma tilt_eqn_locally_lipschitz : autonomous_locally_lipschitz phi.
-Proof.
-move=> /= x.
-exists 1%:pos.
-exact: tilt_eqn_locally_lipschitz_new.
-Qed.
+Lemma tilt_eqn_autonomous_locally_lipschitz : autonomous_locally_lipschitz phi.
+Proof. by move=> /= x; exists 1%:pos; exact: tilt_eqn_locally_lipschitz. Qed.
 
 Lemma tilt_reachable_setS : reachable_set phi Tilt.Upsilon1 `<=` Tilt.Upsilon1.
 Proof.
@@ -503,8 +496,7 @@ rewrite /Tilt.Upsilon1.
 have : {in `]0, D[%R,
     (fun t => ('e_2 - Right (y t)) *d (('e_2 - Right (y t))))^`() =1 0}.
   move => x xd /=.
-  transitivity ((fun t => -2 * (Right (y^`()%classic t) *d
-                                ('e_2 - Right (y t)))) x).
+  transitivity ((fun t => -2 * (Right (y^`()%classic t) *d ('e_2 - Right (y t)))) x).
     rewrite !derive1E.
     have ? : derivable y x 1.
       apply deri.
@@ -516,26 +508,26 @@ have : {in `]0, D[%R,
     rewrite !mxE /= mulr1n.
     under eq_fun do rewrite !mxE /= mulr1n.
     rewrite !derive_dotmul/=.
-      apply: derivableB => /=.
+    - apply: derivableB => /=.
         by [].
-      by apply: derivable_rsubmx => /=.
-    apply: derivableB => /=.
-      by [].
-    by apply: derivable_rsubmx => /=.
-    rewrite /dotmul /=.
-    rewrite [in RHS]mulr2n [RHS]mulNr [in RHS]mulrDl.
-    rewrite !mul1r !dotmulP /= dotmulC [in RHS]dotmulC !linearD /=.
-    rewrite !mxE /= !mulr1n.
-    have -> : 'D_1 (fun x0 => 'e_2 - Right (y x0)) x = - Right ('D_1 y x).
-      rewrite deriveB /=.
-        exact: derivable_cst.
-        exact: derivable_rsubmx.
-      rewrite derive_cst /= sub0r; congr (- _).
-      exact: derive_rsubmx.
-    rewrite -(_ : 'D_1 y x =
-        \matrix_(i, j) 'D_1 (fun t0 => y t0 i j) x).
-      by apply/matrixP => a b; rewrite !mxE derive_mx//= ?mxE.
-    ring.
+      exact: derivable_rsubmx.
+    - apply: derivableB => /=.
+        by [].
+      exact: derivable_rsubmx.
+    - rewrite /dotmul /=.
+      rewrite [in RHS]mulr2n [RHS]mulNr [in RHS]mulrDl.
+      rewrite !mul1r !dotmulP /= dotmulC [in RHS]dotmulC !linearD /=.
+      rewrite !mxE /= !mulr1n.
+      have -> : 'D_1 (fun x0 => 'e_2 - Right (y x0)) x = - Right ('D_1 y x).
+        rewrite deriveB /=.
+          exact: derivable_cst.
+          exact: derivable_rsubmx.
+        rewrite derive_cst /= sub0r; congr (- _).
+        exact: derive_rsubmx.
+      rewrite -(_ : 'D_1 y x =
+          \matrix_(i, j) 'D_1 (fun t0 => y t0 i j) x).
+        by apply/matrixP => a b; rewrite !mxE derive_mx//= ?mxE.
+      ring.
   have Rsu t0 : t0 \in `]0, D[%R -> Right (y^`()%classic t0) =
       (gamma *: (Right (y t0) - Left (y t0)) *m \S('e_2 - Right (y t0)) ^+ 2).
     rewrite inE/=.
@@ -1123,7 +1115,6 @@ Let c2 := 2^-1 / gamma.
 Local Notation Left := (@lsubmx _ 1 3 3).
 Local Notation Right := (@rsubmx _ 1 3 3).
 
-(* todo: copy paste *)
 Lemma derive_zp10 (sol : R -> 'rV_6) :
   sol_is_deriv_c0y (fun=> phi) sol ->
   'D_1 (Left \o sol) 0 = - alpha1 *: Left (sol 0).

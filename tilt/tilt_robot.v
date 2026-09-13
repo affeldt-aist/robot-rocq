@@ -3,7 +3,8 @@ From mathcomp Require Import boot order algebra ring_tactic.
 From mathcomp Require Import interval_inference.
 From mathcomp Require Import unstable boolp classical_sets functions reals.
 From mathcomp Require Import topology normedtype derive realfun.
-Require Import ssr_ext euclidean rigid frame skew derive_matrix tilt_analysis.
+From robot Require Import ssr_ext euclidean rigid frame skew derive_matrix.
+Require Import tilt_analysis.
 
 (**md**************************************************************************)
 (* # Additions to the RobotRocq library                                       *)
@@ -224,23 +225,6 @@ rewrite derive_rsubmx/=.
 reflexivity.
 Qed.
 
-(*Global Instance is_diff_lsubmx {R : realFieldType} {V : normedModType R} {n1 n2}
-    (f df : V -> 'rV[R]_(n1 + n2)) t :
-  is_diff t f df ->
-  is_diff t (fun x => lsubmx (f x)) (fun x => lsubmx (df x)).
-Proof.
-case=> diff_f dfE.
-apply: DiffDef.
-  by apply: differentiable_comp => //; exact: differentiable_lsubmx0.
-apply/funext => v.
-rewrite -dfE.
-rewrite -[LHS]deriveE; last first.
-  by apply: differentiable_comp => //; exact: differentiable_lsubmx0.
-rewrite -[in RHS]deriveE; last first.
-  by [].
-rewrite derive_lsubmx//.
-Abort.*)
-
 Section sphere.
 Context {R : realType} {n : nat}.
 Local Open Scope classical_set_scope.
@@ -252,9 +236,7 @@ Proof.
 move=> n0 r_gt0.
 rewrite /sphere.
 exists (const_mx r).
-rewrite /sphere /= /normr/=.
-(* TODO: need lemma? *)
-rewrite mx_normrE/=.
+rewrite /sphere /= /normr/= mx_normrE/=.
 apply/eqP; rewrite eq_le; apply/andP; split.
   apply: bigmax_le.
     exact: ltW.

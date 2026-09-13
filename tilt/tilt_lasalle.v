@@ -4,8 +4,8 @@ From mathcomp Require Import interval_inference finmap.
 From mathcomp Require Import boolp classical_sets functions reals order.
 From mathcomp Require Import topology normedtype landau sequences derive realfun.
 From mathcomp Require Import matrix_normedtype exp.
-Require Import ssr_ext euclidean rigid frame skew derive_matrix.
-Require Import tilt_mathcomp tilt_analysis tilt_robot.
+From robot Require Import ssr_ext euclidean rigid frame skew derive_matrix.
+Require Import tilt_analysis tilt_robot.
 Require Import lasalle (* to at least get the structure of filters on sets *).
 Require Import ode_common ode_local tilt_stability tilt_lyapunov ode_global.
 
@@ -65,7 +65,6 @@ move=> up; rewrite inE; split => //.
 exact: mem_sublevel_img.
 Qed.
 
-(* NB: not used *)
 Lemma point1_sublevelV1Upsilon1 p : sublevelV1Upsilon1 p Tilt.point1.
 Proof.
 split => /=; last by have /set_mem := @tilt_point1_in_reachable_set K.
@@ -165,7 +164,7 @@ have phi_loc_lip  : forall b, 0 < b ->
   forall x, exists r k : {posnum K},
     {in `[0, b]%R, forall (t : K), k%:num.-lipschitz_(closed_ball x r%:num) ((fun=> phi) t)}.
   move=> b b0 y1.
-  have [r [k y0r]] := @tilt_eqn_locally_lipschitz K alpha1 _ gamma_gt0 y1.
+  have [r [k y0r]] := @tilt_eqn_autonomous_locally_lipschitz K alpha1 _ gamma_gt0 y1.
   by exists r, k.
 exists (global_sol (@compact_sublevelV1Upsilon1 y0) phi_cont phi_loc_lip contained).
   exact: compact_is_sol_cauchy_infty.
@@ -282,7 +281,7 @@ apply: (locally_cauchy_lipschitz_unique _ _ hs) => /=.
   apply is_sol => //.
   by rewrite inE in t0t; rewrite (itvP t0t).
 - move=> t0 t00 t0t.
-  have [r [k y0r]] := @tilt_eqn_locally_lipschitz K alpha1 _ gamma_gt0 (y t0).
+  have [r [k y0r]] := @tilt_eqn_autonomous_locally_lipschitz K alpha1 _ gamma_gt0 (y t0).
     exists r, k; split => // v vy0r.
     exact: cst_continuous.
 - by rewrite bound_itvE ltW.
@@ -369,11 +368,9 @@ Qed.
    namely continuity in initial value *)
 Lemma tilt_sol_cont p (t : K) : {within sublevelV1Upsilon1 p, continuous tilt_sol^~ t}.
 Proof.
-(* TODO: using thm 3.4 *)
 move=> /= u.
 have [pu|] := nbhs_subspaceP _ u; last first.
   move=> pu y.
-  (* to be cleaned *)
   rewrite /nbhs/= => -[M/= HM Hy].
   rewrite /nbhs_subspace.
   rewrite ifF.
@@ -452,7 +449,7 @@ have [r' pur] : exists r' : {posnum K},
   by rewrite -{1}(add0r `|M|) ltr_leD.
 have [k' k'r'phi] :
   exists (k' :  {posnum K}), {in `[0, t + 1]%R, K -> k'%:num.-lipschitz_(closed_ball u r'%:num) phi}.
-  have [k kur'] := @tilt_eqn_locally_lipschitz_new _ alpha1 _ gamma_gt0 u r'%:num.
+  have [k kur'] := @tilt_eqn_locally_lipschitz _ alpha1 _ gamma_gt0 u r'%:num.
   exists k => x xt1.
   exact: kur'.
 have k'0 : 0 < k'%:num by [].

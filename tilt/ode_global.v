@@ -6,14 +6,14 @@ From mathcomp Require Import unstable boolp classical_sets
   contra functions reals topology tvs normedtype landau
   ereal sequences exp derive numfun measure realfun measurable_realfun
   lebesgue_measure lebesgue_integral ftc.
-Require Import tilt_mathcomp tilt_analysis vector_integral ode_common
-  ode_contseg picard_contraction ode_local gronwall.
+Require Import tilt_analysis vector_integral ode_common ode_contseg
+  picard_contraction ode_local gronwall.
 
 (**md**************************************************************************)
 (* # Global versions of the Cauchy-Lipschitz theorem                          *)
 (*                                                                            *)
 (* `sol_extended`                                                             *)
-(* : TODO                                                                     *)
+(* : solution extension for the global variant of Cauchy-Lipschitz            *)
 (*                                                                            *)
 (* `valid_right_endpoints phi a u0`                                           *)
 (* : the set of right end-points b such that there is a solution on [a, b]    *)
@@ -140,9 +140,6 @@ move=> x xb; apply lip2.
 by apply: subset_itvr xb; rewrite bnd_simp/= ltW.
 Qed.
 
-(* (* solution on max interval [a, b) *) *)
-(* Hypothesis is_integral_sol_co : forall b', b' \in `[a,b[%R -> is_integral_sol phi u0 a b' sol. *)
-
 Hypothesis is_sol_oo_f : forall t, t \in `[a, b[%R ->
   is_sol_cauchy_oo phi a t u0 f.
 
@@ -241,7 +238,6 @@ apply/continuous_within_itvP => //; split.
   by rewrite patchC // in_setC in_set1.
  Unshelve. all: by end_near. Qed.
 
-(* Local Notation safe_dist := (@safe_dist R n phi b c k u1 (r%:num / 2)%:pos rho). *)
 Local Notation safe_dist_fwd := (@safe_dist R n phi b c u1 (r%:num / 2)%:pos k rho).
 Local Notation safe_dist := (@safe_dist_sym R n phi a c u1 r k b).
 
@@ -260,7 +256,8 @@ Proof. exact: cauchy_lipschitz_sym_oo. Qed.
 (* extends f_sym_at_b with f_ext_bu1 on [a,b] *)
 Definition sol_extended := patch f_sym_at_b `[a, b] f_ext_bu1.
 
-Lemma sol_extended_continuous : {within `[a, b + safe_dist], continuous sol_extended}.
+Lemma sol_extended_continuous :
+  {within `[a, b + safe_dist], continuous sol_extended}.
 Proof.
 apply: (within_continuous_patch (ltW ab)) => //.
 - by rewrite lerDl ltW// safe_dist_sym_gt0.
@@ -552,7 +549,7 @@ have [r [k Hlip]] := @phi_loc_lip c ac y0.
 by exists r, k; split.
 Qed.
 
-Definition phi_cont c (ac : a < c) :
+Lemma phi_cont c (ac : a < c) :
   {within `[a, c] `*` K, continuous (fun p : (R * U)%type => phi p.1 p.2)}.
 Proof.
 apply/subspace_continuousP => /=  [[t0 y0] [/= pD1 pD2]].
@@ -785,7 +782,7 @@ apply: (compact_solution_extends (c := sup valid_right_endpoints + 1) (K := K)) 
   by rewrite ltr_pDr// lt_sup_valid_right_endpoints.
 Qed.
 (* Thm 3.3 in Khalil *)
-           
+
 End max_solution.
 
 Section compact_global_solution.
@@ -963,13 +960,13 @@ Qed.
 End compact_global_solution.
 
 (* Theorem 3.4 from Khalil (p. 96),
-   specialized to g := 0,
+   specialized to g := 0
    TODO: generalize *)
 Section continuous_dependence_thm34.
 Context {R : realType} {n : nat} (U := 'rV[R]_n) (phi : R -> U -> U) (a b : R)
   (k : R).
 Let psi : R -> U -> U := cst 0.
-Variables (u0 v0 : U) (r : {posnum R}) (*(r1 : r%:num < 1)*).
+Variables (u0 v0 : U) (r : {posnum R}).
 
 Hypothesis ab : a < b.
 (* TODO: there seems to be no reason to have B being a closed ball
@@ -1276,7 +1273,7 @@ rewrite /Rintegral (@continuous_FTC2 _ _ (fun x => - mu / k * expR (k * (t - x))
     by move=> ? ?; exact: continuous_expR.
   apply/within_continuousMl => //=; apply/within_continuousB => //=.
     exact: cst_within_continuous.
-  by apply: continuous_subspaceT => x; exact: cvg_id. (* TODO: id_continuous lemma *)
+  by apply: continuous_subspaceT => x; exact: cvg_id.
 - split => //=.
   + apply: cvg_at_right_filter; apply: cvgMl_tmp.
     apply: (@cvg_comp _ _ _ _ expR _ (nbhs (k * (t - a)))) => //; last first.

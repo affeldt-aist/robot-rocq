@@ -6,7 +6,7 @@ From mathcomp Require Import unstable boolp classical_sets
   contra functions constructive_ereal reals topology
   tvs normedtype landau ereal sequences exp derive numfun measure
   realfun measurable_realfun lebesgue_measure lebesgue_integral ftc.
-Require Import tilt_mathcomp tilt_analysis.
+Require Import tilt_analysis.
 
 (**md**************************************************************************)
 (* # Integration of vector-valued functions                                   *)

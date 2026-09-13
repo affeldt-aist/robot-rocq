@@ -5,7 +5,7 @@ From mathcomp Require Import unstable boolp classical_sets functions filter
   reals topology ereal normedtype sequences derive realfun
   landau measure lebesgue_integral lebesgue_measure
   lebesgue_stieltjes_measure measurable_realfun ftc.
-Require Import ssr_ext derive_matrix.
+From robot Require Import ssr_ext derive_matrix.
 
 (**md**************************************************************************)
 (* # Additions to MathComp-Analysis                                           *)
@@ -24,7 +24,10 @@ Import numFieldNormedType.Exports.
 Local Open Scope ring_scope.
 Local Open Scope classical_set_scope.
 
-Lemma closed_ball_coord {R : realType} {n} (x0 : 'rV[R]_n) (r : R) x :
+Lemma patch_in {R X : Type} (f g : R -> X) S x : x \in S -> patch f S g x = g x.
+Proof. by move => xs; rewrite /patch xs. Qed.
+
+Lemma closed_ball_coord {R : realFieldType} {n} (x0 : 'rV[R]_n) (r : R) x :
   0 < r ->
   closed_ball x0 r x <-> forall i, closed_ball (x0 ord0 i) r (x ord0 i).
 Proof.
@@ -44,6 +47,27 @@ move=> r0; split.
   by rewrite closed_ballE// /closed_ball_ /= 2!mxE.
 Qed.
 
+Lemma closed_ball_split {R : realFieldType} (U : normedModType R) (x1 x2 y : U)
+    q : 0 < q ->
+  closed_ball x1 (q / 2) y -> closed_ball x2 (q / 2) x1 -> closed_ball x2 q y.
+Proof.
+move=> q0.
+have q20 : 0 < q / 2 by rewrite divr_gt0.
+rewrite !closed_ballE// /closed_ball_ /= => h1 h2.
+by rewrite -(subrKA x1 x2) (le_trans (ler_normD _ _))// (splitr q) lerD.
+Qed.
+
+Lemma cont_within_cont_comp {R : realType} {W : normedModType R} (f : W -> R)
+  (K : set R) (g : continuousSubspaceType K [set: W]) : {in g @` K, continuous f} ->
+  {within K, continuous (f \o g)}.
+Proof.
+move=> ctf.
+rewrite continuous_subspace_in => /= x Kx.
+apply: continuous_comp; first exact: continuous_fun.
+apply: ctf.
+exact: image_f Kx.
+Qed.
+
 Section lipschitz_coord.
 Context {R : realFieldType} {n} (U := 'rV[R]_n) (f : U -> U) (k : R)
   (B : set U).
@@ -57,8 +81,7 @@ split.
   move /(_ (x1,x2) Bx12) : lip.
   apply le_trans => /=.
   rewrite /Num.norm/= mx_normrE.
-  have -> : f x1 ord0 i - f x2 ord0 i = (f x1 - f x2) ord0 i.
-    by rewrite !mxE.
+  have -> : f x1 ord0 i - f x2 ord0 i = (f x1 - f x2) ord0 i by rewrite !mxE.
   exact: (le_bigmax _ _ (ord0, i)).
 - move => h /= [x1 x2] Bx12 /=.
   rewrite [in leLHS]/Num.norm/= mx_normrE.
@@ -288,23 +311,6 @@ rewrite (bigD1 i) //= lerDl.
 by apply: sumr_ge0 => j _; exact: normr_ge0.
 Qed.
 
-Section measurable_fun_bigmaxr.
-Import MeasurableR.
-
-(* NB: PR in progress *)
-Lemma measurable_bigmaxr d (T : measurableType d) (R : realType) (D : set T)
-  def {n} (f : 'I_n -> T -> R) :
-  (forall i, measurable_fun D (f i)) ->
-  measurable_fun D (fun x => \big[maxr/def]_(i < n) f i x).
-Proof.
-elim: n f => [|n ih] f mf.
-  by under eq_fun do rewrite big_ord0/=; exact: measurable_cst.
-under eq_fun do rewrite big_ord_recl/=.
-by apply: measurable_maxr; [exact: mf|apply: ih => i; exact: mf].
-Qed.
-
-End measurable_fun_bigmaxr.
-
 Section integrable_row_mx_norm.
 Import MeasurableR.
 
@@ -403,27 +409,6 @@ exact: bounded_cst.
 Qed.
 
 End integral_cst.
-
-(* TODO: move *)
-Lemma closed_ball_split {R : realFieldType} (U : normedModType R) (x1 x2 y : U)
-    q : 0 < q ->
-  closed_ball x1 (q / 2) y -> closed_ball x2 (q / 2) x1 -> closed_ball x2 q y.
-Proof.
-move=> q0.
-have q20 : 0 < q / 2 by rewrite divr_gt0.
-rewrite !closed_ballE// /closed_ball_ /= => h1 h2.
-by rewrite -(subrKA x1 x2) (le_trans (ler_normD _ _))// (splitr q) lerD.
-Qed.
-
-(* TODO: to appear in MCA 1.18.0 *)
-Lemma within_continuous_continuous_new {R : realFieldType} {K : numDomainType}
-    {U : pseudoMetricNormedZmodType K} a b (f : R -> U) x : (a <= b)%R ->
-  {within `[a, b], continuous f} -> x \in `]a, b[%R -> {for x, continuous f}.
-Proof.
-rewrite le_eqVlt => /predU1P[<- _|ab].
-  by rewrite in_itv/= => /andP[] /lt_trans /[apply]; rewrite ltxx.
-by move=> /continuous_within_itvP-/(_ ab)[+ _ _]; exact.
-Qed.
 
 (* TODO: PR to MCA *)
 Lemma closure_neitv_oy {R : realType} (a : R) :
@@ -646,6 +631,13 @@ rewrite setIC; apply/disjoints_subset.
 rewrite (closure_id (~` A)).1; first exact: open_closedC.
 apply/closureS/disjoints_subset.
 by rewrite setIC.
+Qed.
+
+Lemma compact_has_ubound {R : realType} (A : set R) : compact A -> has_ubound A.
+Proof.
+move=> /compact_bounded[u [_ /= uA]].
+exists (u + 1) => x Ax.
+by rewrite (le_trans (ler_norm x))// uA// ltrDl.
 Qed.
 
 (* finite intersection property *)
@@ -878,20 +870,14 @@ wlog xLy : x y xab yab/ x <= y.
   by apply/esym/H => //.
 rewrite -(subKr (f y) (f x)).
 have : forall x0, x0 \in `]x, y[%R -> is_derive x0 1 f (0 x0).
-  move=> z zxy.
-  apply: Hd.
+  move=> z zxy; apply: Hd.
   move: zxy.
-  apply: subset_itvSoo; rewrite bnd_simp.
-  by rewrite ltW// (itvP xab).
-  by rewrite ltW// (itvP yab).
+  by apply: subset_itvSoo; rewrite bnd_simp ?(itvP xab) ?(itvP yab).
 move/MVT_segment => /(_ xLy)[].
-  apply: continuous_subspaceW(* NB: should be , do a PRS*) cf.
-  apply: subset_itvScc; rewrite bnd_simp.
-  by rewrite ltW// (itvP xab).
-  by rewrite ltW// (itvP yab).
+  apply: continuous_subspaceW cf.
+  by apply: subset_itvScc; rewrite bnd_simp ?(itvP xab) ?(itvP yab).
 move=> r rxy.
-rewrite mul0r => ->.
-by rewrite subr0.
+by rewrite mul0r => ->; rewrite subr0.
 Qed.
 
 Lemma cc_is_derive_0_is_cst {R : realType} (f : R -> R) y (a b : R) :
@@ -945,7 +931,6 @@ apply/eqP; rewrite eq_le (ltW yx)/=.
 by rewrite -leNgt in xy.
 Qed.
 
-(* NB: not used *)
 Section gradient.
 
 Definition jacobian1 {R : numFieldType} n (f : 'rV[R]_n -> R)
@@ -966,16 +951,6 @@ rewrite derive_mx ?mxE/=.
 rewrite /partial.
 under eq_fun do rewrite (addrC a).
 by under [in RHS]eq_fun do rewrite !mxE/= !mulr1n.
-Qed.
-
-Definition err_vec {R : pzRingType} n (i : 'I_n) : 'rV[R]_n :=
-  \row_(j < n) (i == j)%:R.
-
-Lemma err_vecE {R : pzRingType} n (i : 'I_n) :
-  err_vec i = 'e_i :> 'rV[R]_n.
-Proof.
-apply/rowP => j.
-by rewrite !mxE eqxx /= eq_sym.
 Qed.
 
 Definition gradient_partial {R : numFieldType} n (f : 'rV[R]_n -> R) (a : 'rV[R]_n) :=

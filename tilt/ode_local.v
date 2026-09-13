@@ -7,8 +7,8 @@ From mathcomp Require Import topology tvs normedtype.
 From mathcomp Require Import landau ereal sequences derive numfun measure.
 From mathcomp Require Import realfun measurable_realfun lebesgue_measure.
 From mathcomp Require Import lebesgue_integral ftc.
-Require Import tilt_mathcomp tilt_analysis vector_integral ode_common
-  ode_contseg picard_contraction.
+Require Import tilt_analysis vector_integral ode_common ode_contseg
+  picard_contraction.
 
 (**md**************************************************************************)
 (* # Proof of the Cauchy-Lipschitz theorem                                    *)
@@ -91,18 +91,8 @@ move=> + D t t0D; apply.
 by apply: subset_itvl t0D; rewrite bnd_simp.
 Qed.
 
-(* NB: not used
-Lemma sol_is_deriv_cy_co a b : sol_is_deriv phi `[a, +oo[%R `<=`
-  sol_is_deriv_cbnd a (BLeft b).
-Proof.
-by move=> f + t tab; apply; exact: subset_itvl tab.
-Qed.
-*)
-
 Definition sol_is_deriv_obnd (a : R) (b : itv_bound R) (f : R -> U) :=
   sol_is_deriv phi (Interval (BRight a) b) f.
-
-(*Definition sol_is_deriv_oo a b := sol_is_deriv_obnd a (BLeft b).*)
 
 (*NB: b = (BLeft r) is open,
       b = (BRight r) is closed,
@@ -174,7 +164,6 @@ Local Notation mu := lebesgue_measure.
 Context {R : realType} {n} (U := 'rV[R]_n) (phi : R -> U -> U) (a b : R)
   (u0 : U).
 
-(* TODO: is this a good way to define it with the extra sol a = u0G?  *)
 Definition is_sol_integral (f : R -> U) := f a = u0 /\
   {in `[a, b]%R, forall t, f t = f a + \vint[mu]_(s in `[a, t]) phi s (f s)}.
 
@@ -335,7 +324,7 @@ Hypothesis f_bound : f @` `[a, b] `<=` closed_ball u0 r%:num.
 Lemma continuous_ODE i t : t \in `]a, b[%R ->
   {for t, continuous (fun x => phi x (f x) ord0 i)}.
 Proof.
-move/within_continuous_continuous_new; apply => //.
+move/within_continuous_continuous; apply => //.
 exact: (within_continuous_ODE cont1 lip2).
 Qed.
 
@@ -355,7 +344,7 @@ move => [hinit h].
 split; first by [].
 split; last first.
   apply: continuous_subspaceW cont_f.
-  exact: itv_closure (* TODO: why not equality? *).
+  exact: itv_closure.
 move=> t tab.
 move: (tab).
 have -> : f^`() t  = (fun x => f a + \vint[mu]_(s in `[a, x]) phi s (f s))^`() t.
@@ -521,7 +510,7 @@ suff -> : (picard picard_fix)^`() t =
     exact: img_cball_picard_fix.
   have Fcont i : {for t, continuous (fun x => phi x (picard_fix x) ord0 i)}.
     move: tad; rewrite inE.
-    apply/within_continuous_continuous_new => //=.
+    apply/within_continuous_continuous => //=.
      by rewrite leDl_safe_dist// ltW.
     clear Fint.
     move: i; apply/within_continuous_coord.
@@ -704,11 +693,6 @@ apply set_mem in Bx.
 by apply /le_closed_ball/Bx.
 Qed.
 
-(* Let rho : {posnum R} := (2^-1)%:pos. *)
-
-(* Let rho1 : rho%:num < 1. *)
-(* Proof. by rewrite /rho/= invf_lt1// ltr1n. Qed. *)
-
 Local Notation safe_dist := (safe_dist phi a b u0 r2%:num k rho%:num).
 
 Definition cauchy_lipschitz_f :
@@ -808,42 +792,6 @@ by rewrite ContSeg_quot.eval_mod_on_itv.
 Qed.
 
 End cauchy_lipschitz_local.
-
-(* TODO: move *)
-Section continuous_confined.
-Context {R : realType} {n} (U := 'rV[R]_n) (a b : R) (u0 : U) (r : {posnum R}).
-Hypothesis ab : a < b.
-Let B := closed_ball u0 r%:num.
-
-Local Lemma continuous_confined (g : R -> U) : {within `[a, b], continuous g} ->
-  g a = u0 ->
-  exists Delta : {posnum R}, {in `[a, a + Delta%:num], forall t, g t \in B}.
-Proof.
-move/(continuous_within_itvP _ ab)  => [cc cl cr] g0.
-have : {within `[a,b], continuous (fun t => `| u0 - g t |) }.
-  apply: within_continuous_comp_norm.
-  apply/continuous_within_itvP => //=.
-  split.
-  - move => t tab.
-    exact: (cvgB (cvg_cst _) (cc _ tab)).
-  - exact: (cvgB (cvg_cst _) cl).
-  - exact: (cvgB (cvg_cst _) cr).
-move/(continuous_within_itvP _ ab) => [_ /cvgrPdist_le + _].
-move=> /(_ r%:num ltac:(by []))[Delta /= Delta0].
-rewrite /ball_/= g0 subrr normr0/= => H.
-have D20 : 0 < Delta / 2 by rewrite divr_gt0.
-exists (PosNum D20) => t.
-rewrite inE/= in_itv/= => /andP[].
-rewrite le_eqVlt => /predU1P[<-|ta td].
-  by rewrite g0 /B inE => _; exact: closed_ballxx.
-have /= := H t.
-rewrite add0r normrN normr_id.
-rewrite inE /B closed_ballE /closed_ball_//=; apply => //.
-rewrite ltr0_norm ?subr_lt0// opprB ltrBlDl.
-by rewrite (le_lt_trans td)// ltrD2l gtr_pMr// invf_lt1// ltr1n.
-Qed.
-
-End continuous_confined.
 
 Section solution_locally_unique.
 Context {R : realType} {n} (U := 'rV[R]_n) (phi : R -> U -> U) (a b : R)
@@ -1169,10 +1117,6 @@ by rewrite bnd_simp -lerBrDl; apply safe_dist_itv.
 Qed.
 
 End cauchy_lipschitz_uniqueness.
-
-(* TODO: move? *)
-Lemma patch_in {R X : Type} (f g : R -> X) S x : x \in S -> patch f S g x = g x.
-Proof. by move => xs; rewrite /patch xs. Qed.
 
 Section cauchy_lipschitz_symmetric_def.
 Context {R : realType} {n} (U := 'rV[R]_n) (phi : R -> U -> U).

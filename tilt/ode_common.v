@@ -7,7 +7,7 @@ From mathcomp Require Import functions reals interval_inference topology.
 From mathcomp Require Import tvs normedtype landau.
 From mathcomp Require Import ereal sequences derive numfun measure realfun.
 From mathcomp Require Import lebesgue_measure lebesgue_integral ftc.
-Require Import tilt_mathcomp.
+Require Import tilt_analysis.
 
 (**md**************************************************************************)
 (* # Preparation steps to ode_contfun.v                                       *)
@@ -80,93 +80,49 @@ case: ifPn => xD.
 by rewrite /GRing.mul_fun (negbTE xD)// mulr0.
 Qed.
 
-(* TODO: now in MathComp-Analysis master *)
-Section continuous_within_itvP.
-Context {R : realType}.
-Context {U : normedModType R}.
-
-Implicit Type f : R -> U.
-
-Let near_at_left (a : itv_bound R) b f eps : (a < BLeft b)%O -> 0 < eps ->
-  {within [set` Interval a (BRight b)], continuous f} ->
-  \forall t \near b^'-, `|f b - f t| < eps.
-Proof.
-move=> ab eps_gt0 cf.
-move/continuous_withinNx/(@cvgrPdist_lt _ _)/(_ _ eps_gt0) : (cf b).
-rewrite /dnbhs/= near_withinE !near_simpl /prop_near1 /nbhs/=.
-rewrite -nbhs_subspace_in//.
-  rewrite /= in_itv/= lexx andbT.
-  by move: a ab {cf} => [[a|a]/=|[|]//]; rewrite bnd_simp// => /ltW.
-rewrite /within/= near_simpl; apply: filter_app.
-move: a ab {cf} => [a0 a/= /[!bnd_simp] ab|[_|//]].
-- exists (b - a); rewrite /= ?subr_gt0// => c cba + ac.
-  apply=> //; rewrite ?lt_eqF// !in_itv/= (ltW ac)/= andbT; move: cba => /=.
-  rewrite gtr0_norm ?subr_gt0// ltrD2l ltrNr opprK => {}ac.
-  by case: a0 => //=; exact/ltW.
-- by exists 1%R => //= c cb1 + bc; apply; rewrite ?lt_eqF ?in_itv/= ?ltW.
-Qed.
-
-Let near_at_right a (b : itv_bound R) f eps : (BRight a < b)%O -> 0 < eps ->
-  {within [set` Interval (BLeft a) b], continuous f} ->
-  \forall t \near a^'+, `|f a - f t| < eps.
-Proof.
-move=> ab eps_gt0 cf.
-move/continuous_withinNx/(@cvgrPdist_lt _ _)/(_ _ eps_gt0) : (cf a).
-rewrite /dnbhs/= near_withinE !near_simpl// /prop_near1 /nbhs/=.
-rewrite -nbhs_subspace_in//.
-  rewrite /= in_itv/= lexx//=.
-  by move: b ab {cf} => [[b|b]/=|[|]//]; rewrite bnd_simp// => /ltW.
-rewrite /within/= near_simpl; apply: filter_app.
-move: b ab {cf} => [b0 b/= /[!bnd_simp] ab|[//|_]].
-- exists (b - a); rewrite /= ?subr_gt0// => c cba + ac.
-  apply=> //; rewrite ?gt_eqF// !in_itv/= (ltW ac)/=; move: cba => /=.
-  rewrite ltr0_norm ?subr_lt0// opprB ltrD2r.
-  by case: b0 => //= /ltW.
-- by exists 2%R => //= c ca1 + ac; apply; rewrite ?gt_eqF ?in_itv/= ?ltW.
-Qed.
-
-(* NB: PR  *)
-Lemma continuous_within_itvP_g a b f : a < b ->
-  {within `[a, b], continuous f} <->
-  [/\ {in `]a, b[, continuous f}, f @ a^'+ --> f a & f @b^'- --> f b].
-Proof.
-move=> ab; split=> [abf|].
-  split; [|apply/(@cvgrPdist_lt _ _) => eps eps_gt0 /=..].
-  - rewrite -continuous_open_subspace; first exact: interval_open.
-    by move: abf; exact/continuous_subspaceW/subset_itvW.
-  - by apply: near_at_right => //; rewrite bnd_simp.
-  - by apply: near_at_left => //; rewrite bnd_simp.
-case=> ctsoo ctsL ctsR; apply/subspace_continuousP => x /andP[].
-rewrite !bnd_simp/= !le_eqVlt => /predU1P[<-{x}|ax] /predU1P[|].
-- by move/eqP; rewrite lt_eqF.
-- move=> _; apply/(@cvgrPdist_lt _ _) => eps eps_gt0 /=.
-  move/(@cvgrPdist_lt _ _)/(_ _ eps_gt0): ctsL; rewrite /at_right !near_withinE.
-  apply: filter_app; exists (b - a); rewrite /= ?subr_gt0// => c cba + ac.
-  have : a <= c by move: ac => /andP[].
-  by rewrite le_eqVlt => /predU1P[->|/[swap] /[apply]//]; rewrite subrr normr0.
-- move=> ->; apply/(@cvgrPdist_lt _ _) => eps eps_gt0 /=.
-  move/(@cvgrPdist_lt _ _)/(_ _ eps_gt0): ctsR; rewrite /at_left !near_withinE.
-  apply: filter_app; exists (b - a); rewrite /= ?subr_gt0 // => c cba + ac.
-  have : c <= b by move: ac => /andP[].
-  by rewrite le_eqVlt => /predU1P[->|/[swap] /[apply]//]; rewrite subrr normr0.
-- move=> xb; have aboox : x \in `]a, b[ by  rewrite inE /= !in_itv/= ax.
-  rewrite within_interior; last exact: ctsoo.
-  rewrite inE in aboox.
-  suff : `]a, b[ `<=` interior `[a, b] by exact.
-  by rewrite -open_subsetE; [exact: interval_open|exact: subset_itvW].
-Qed.
-
-End continuous_within_itvP.
-
-Lemma within_continuous_comp_norm {R : realType} {U : normedModType R} (K : set R) (f : R -> U) :
+Lemma within_continuous_comp_norm {R : realType} {U : normedModType R}
+    (K : set R) (f : R -> U) :
   {within K, continuous fun x => f x} ->
   {within K, continuous fun x => `|f x|}.
 Proof.
-move=> H.
-apply: within_continuous_comp => // y.
-rewrite inE/= => -[x Kx <-].
-exact: norm_continuous.
+move=> H; apply: within_continuous_comp => // y.
+by rewrite inE/= => -[x Kx <-]; exact: norm_continuous.
 Qed.
+
+Section continuous_confined.
+Context {R : realType} {n} (U := 'rV[R]_n) (a b : R) (u0 : U) (r : {posnum R}).
+Hypothesis ab : a < b.
+Let B := closed_ball u0 r%:num.
+
+Lemma continuous_confined (g : R -> U) : {within `[a, b], continuous g} ->
+  g a = u0 ->
+  exists Delta : {posnum R}, {in `[a, a + Delta%:num], forall t, g t \in B}.
+Proof.
+move/(continuous_within_itvP _ ab)  => [cc cl cr] g0.
+have : {within `[a,b], continuous (fun t => `| u0 - g t |) }.
+  apply: within_continuous_comp_norm.
+  apply/continuous_within_itvP => //=.
+  split.
+  - move => t tab.
+    exact: (cvgB (cvg_cst _) (cc _ tab)).
+  - exact: (cvgB (cvg_cst _) cl).
+  - exact: (cvgB (cvg_cst _) cr).
+move/(continuous_within_itvP _ ab) => [_ /cvgrPdist_le + _].
+move=> /(_ r%:num ltac:(by []))[Delta /= Delta0].
+rewrite /ball_/= g0 subrr normr0/= => H.
+have D20 : 0 < Delta / 2 by rewrite divr_gt0.
+exists (PosNum D20) => t.
+rewrite inE/= in_itv/= => /andP[].
+rewrite le_eqVlt => /predU1P[<-|ta td].
+  by rewrite g0 /B inE => _; exact: closed_ballxx.
+have /= := H t.
+rewrite add0r normrN normr_id.
+rewrite inE /B closed_ballE /closed_ball_//=; apply => //.
+rewrite ltr0_norm ?subr_lt0// opprB ltrBlDl.
+by rewrite (le_lt_trans td)// ltrD2l gtr_pMr// invf_lt1// ltr1n.
+Qed.
+
+End continuous_confined.
 
 Lemma lipschitzW {R : realType} {T U W : normedModType R} (A B : set T) C (f : T -> U -> W) k :
   A `<=` B -> {in B, forall x, k.-lipschitz_C (f x)} -> {in A, forall x, k.-lipschitz_C (f x)}.
@@ -176,19 +132,17 @@ apply: H.
 by apply/mem_set/AB/set_mem.
 Qed.
 
-(* NB: why is in1_subset_itv so specialized?! *)
-
 Section lip_implies_cont.
-Context {R : realType}.
-Variables (f : R -> R -> R) (a t1 : R).
+Context {R : realType} (f : R -> R -> R) (a t1 : R) (u0 : R) (r : {posnum R})
+  (k : R).
+
 Hypothesis a1 : a <= t1.
-Variable k : R.
-Variables (u0 : R) (r : {posnum R}).
 Let B := closed_ball u0 r%:num.
 
 Hypothesis lip2 : {in `[a, t1]%R, forall x, k.-lipschitz_B (f x)}.
 
-Lemma lipschitz_within_continuous : {in `[a, t1]%R, forall x, {within B, continuous f x}}.
+Lemma lipschitz_within_continuous :
+  {in `[a, t1]%R, forall x, {within B, continuous f x}}.
 Proof.
 move=> x xa1.
 rewrite [B]closed_ball_itv//.
@@ -222,15 +176,12 @@ split.
   have [k0|k0] := ltP 0 k; last first.
     near=> y'.
     by rewrite (le_trans _ (ltW e0))// mulr_le0_ge0.
-  near=> y'.
-  rewrite -ler_pdivlMl// mulrC.
-  near: y'.
+  near do rewrite -ler_pdivlMl// mulrC.
   exists (e / k).
-  by rewrite divr_gt0.
+    by rewrite divr_gt0.
   by move=> z/= => /ltW.
 - apply/cvgrPdist_le => /= e e0.
   have [k0|k0] := ltP 0 k; last first.
-    (* TODO: clean, bad dup *)
     near=> y'.
     move: (xa1); have := @lip2 x => /[apply].
     move=> /(_ (u0 - r%:num, y'))/=.
@@ -252,16 +203,13 @@ split.
   move: (xa1); have := @lip2 x => /[apply].
   move=> /(_ (u0 - r%:num, y'))/=.
     have Bu0r : B (u0 - r%:num).
-      rewrite /B closed_ball_itv//=.
-      by rewrite bound_itvE lerD2l gerN.
+      by rewrite /B closed_ball_itv//= bound_itvE lerD2l gerN.
     have By' : B y'.
       rewrite /B closed_ball_itv//=.
       rewrite in_itv/=; apply/andP; split => //.
       near: y'.
-      exists r%:num => //=.
-      move=> z/=.
-      rewrite ltr_distlC.
-      rewrite subrK => /andP[_ /ltW + _] => /le_trans; apply.
+      exists r%:num => //= z/=.
+      rewrite ltr_distlC subrK => /andP[_ /ltW + _] => /le_trans; apply.
       by rewrite lerDl.
   move=> /(_ (conj Bu0r By'))/le_trans; apply.
   rewrite -ler_pdivlMl// mulrC.
@@ -270,7 +218,6 @@ split.
   by move=> z/= => /ltW.
 - apply/cvgrPdist_le => /= e e0.
   have [k0|k0] := ltP 0 k; last first.
-    (* TODO: clean, bad dup *)
     near=> y'.
     move: (xa1); have := @lip2 x => /[apply].
     move=> /(_ (y', u0 + r%:num))/=.
@@ -284,11 +231,9 @@ split.
         rewrite lerBlDl => /le_trans; apply.
         by rewrite lerDr.
       have Bu0r : B (u0 + r%:num).
-      rewrite /B closed_ball_itv//=.
-      by rewrite bound_itvE lerD2l gerN.
+      by rewrite /B closed_ball_itv//= bound_itvE lerD2l gerN.
     move=> /(_ (conj By' Bu0r)).
-    rewrite distrC.
-    move=> /le_trans; apply.
+    rewrite distrC => /le_trans; apply.
     by rewrite (le_trans _ (ltW e0))// mulr_le0_ge0.
   near=> y'.
   move: (xa1); have := @lip2 x => /[apply].
@@ -297,14 +242,12 @@ split.
       rewrite /B closed_ball_itv//=.
       rewrite in_itv/=; apply/andP; split => //.
       near: y'.
-      exists r%:num => //=.
-      move=> z/=.
+      exists r%:num => //= z/=.
       rewrite ltr_distlC addrK => /andP[/ltW + _ _].
       rewrite lerBlDl => /le_trans; apply.
       by rewrite lerDr.
     have Bu0r : B (u0 + r%:num).
-    rewrite /B closed_ball_itv//=.
-    by rewrite bound_itvE lerD2l gerN.
+    by rewrite /B closed_ball_itv//= bound_itvE lerD2l gerN.
   move=> /(_ (conj By' Bu0r)).
   rewrite distrC.
   move=> /le_trans; apply.
@@ -317,10 +260,8 @@ Unshelve. all: end_near. Qed.
 
 End lip_implies_cont.
 
-(* NB: should this be PRed or is a patch for our development? *)
 Section cst_continuous_on_subspace.
-Context {R : realType} {W : topologicalType}.
-Variable A : set R.
+Context {R : realType} {W : topologicalType} (A : set R).
 
 Lemma cst_continuous_subspace (r : W) : {within A, continuous (cst r)}.
 Proof. by apply: continuous_subspaceT; exact: cst_continuous. Qed.
@@ -331,7 +272,6 @@ HB.instance Definition _ x := isContinuous.Build (subspace A) W
 End cst_continuous_on_subspace.
 
 (* NB: continuousFunType is defined in subspace_topology.v *)
-
 HB.instance Definition _ (R : realType) (V : topologicalType) (A : set R) :=
   gen_eqMixin (continuousSubspaceType A [set: V]).
 
@@ -385,13 +325,8 @@ Lemma contseg_eqP (f g : continuousSubspaceType A [set: V]) :
   f = g <-> f =1 g.
 Proof. by split=> [->//|fg]; exact/val_inj/funext. Qed.
 
-(*
-HB.instance Definition _ := [Choice of continuousSubspaceType `[a, b] [set: R] by <:].
-*)
-
 End contseg_sub.
 
-(* TODO: generalize to any set? *)
 Definition contsegN {R : realType} (K : set R) (g : R -> R) :=
   g \o -%R.
 Arguments contsegN {R} _ _.
@@ -479,7 +414,6 @@ Variable g : R -> U.
 Hypothesis cg : {within `[a, b], continuous g}.
 Hypothesis imageg : g @` `[a, b] `<=` B.
 
-(* TODO: move *)
 Let lipschitz0_at_right : k = 0 -> a < b ->
   f x0 (g x0) @[x0 --> a^'+] --> f a (g a).
 Proof.
@@ -532,7 +466,7 @@ have e20 : 0 < e / 2 by rewrite divr_gt0.
 (* use continuity in first variable *)
 have c1_ineq : \forall t \near a^'+, `|f a (g a) - f t (g a)| <= e / 2.
   have : g a \in (B : set U) by apply/mem_set/imageg => /=; exists a.
-  move /cont1/continuous_within_itvP_g => /(_ ab).
+  move/cont1/continuous_within_itvP => /(_ ab).
   move=> [_ + _].
   rewrite cvgrPdist_le /=.
   exact.
@@ -543,7 +477,7 @@ have gtd : \forall t \near a^'+, g t \in (B : set U).
   by near: t; exact: nbhs_right_le.
 (* use continuity of g *)
 have cg_ineq : \forall t \near a^'+, `|g a - g t| <= `|k|^-1 * (e / 2).
-  have /continuous_within_itvP_g := cg.
+  have /continuous_within_itvP := cg.
   move/(_ ab) => [_ + _].
   move/cvgrPdist_le => /(_  (`|k|^-1 * (e / 2)) ).
   apply.
@@ -579,7 +513,7 @@ have bbab : b \in `[a, b]%R by rewrite bound_itvE ltW.
 have e20 : 0 < e / 2 by rewrite divr_gt0.
 have c1_ineq :  \forall t \near b^'-,  `|f b (g b) - f t (g b)| <= e / 2.
   have : g b \in (B : set U) by apply/mem_set/imageg => //=; exists b.
-  move /cont1/continuous_within_itvP_g => /(_ ab).
+  move /cont1/continuous_within_itvP => /(_ ab).
   move=> [_ _ +].
   rewrite cvgrPdist_le /=.
   exact.
@@ -589,7 +523,7 @@ have gtd : \forall t \near b^'-, g t \in (B : set U).
   rewrite in_itv/=; apply/andP; split => //.
   by near: t; exact: nbhs_left_ge.
 have cg_ineq : \forall t \near (b)^'-, `|g b - g t| <= `|k|^-1 * (e / 2).
-  have /continuous_within_itvP_g := cg.
+  have /continuous_within_itvP := cg.
   move/(_ ab) => [_ _ +].
   move/cvgrPdist_le => /(_  (`|k|^-1 * (e / 2))).
   apply.
@@ -622,8 +556,8 @@ have [ab|] := ltP a b; last first.
   rewrite le_eqVlt => /predU1P[<-|ab].
     by rewrite set_itv1; exact: continuous_subspace1.
   by rewrite set_itv_ge ?bnd_simp -?ltNge//; exact: continuous_subspace0.
-apply/continuous_within_itvP_g; [by [] | split].
-- move=> x; rewrite inE /= in_itv/= => /andP[ndx dx].
+apply/continuous_within_itvP; [by [] | split].
+- move=> x; rewrite in_itv/= => /andP[ndx dx].
   rewrite /continuous_at.
   apply/cvgrPdist_le => /= e e0.
   have gxB : g x \in (B : set U).
@@ -640,12 +574,12 @@ apply/continuous_within_itvP_g; [by [] | split].
     have /cont1 : g x \in B.
       apply/mem_set/imageg => /=; exists x => //.
       by rewrite in_itv/= (ltW ndx) (ltW dx).
-    move/continuous_within_itvP_g => /(_ ab).
+    move/continuous_within_itvP => /(_ ab).
     move=> [+ Htmp1 Htmp2].
     move/(_ x).
     rewrite /continuous_at.
     have e20 : 0 < e / 2 by rewrite divr_gt0.
-    rewrite inE /= !in_itv/= ndx dx => /(_ isT).
+    rewrite !in_itv/= ndx dx => /(_ isT).
     move/cvgrPdist_le => /(_ _ e20)[r0 /= r0_gt0 Br0].
     near=> t.
     apply: Br0 => //.
@@ -672,17 +606,14 @@ apply/continuous_within_itvP_g; [by [] | split].
     move=> /le_trans; apply.
     near: t.
     have [->|] := eqVneq k 0.
-      near=> t.
-      by rewrite mul0r divr_ge0// ltW.
+      by near=> t; rewrite mul0r divr_ge0// ltW.
     rewrite neq_lt => /orP[k0|k0].
       near=> t.
       rewrite (@le_trans _ _ 0)//; last by rewrite divr_ge0// ltW.
       by rewrite mulr_le0_ge0// ltW.
-    near=> t.
-    rewrite -ler_pdivlMl//.
-    near: t.
-    move/continuous_within_itvP_g : cg => /(_ ab)[+ _ _] => /(_ x).
-    rewrite inE /= in_itv/= ndx dx => /(_ isT).
+    near do rewrite -ler_pdivlMl//.
+    move/continuous_within_itvP : cg => /(_ ab)[+ _ _] => /(_ x).
+    rewrite in_itv/= ndx dx => /(_ isT).
     rewrite /continuous_at => /cvgrPdist_le.
     apply.
     by rewrite mulr_gt0 ?divr_gt0 ?invr_gt0//.
@@ -692,25 +623,6 @@ Unshelve. all: end_near. Qed.
 
 End within_continuous_lipschitz.
 
-Lemma compact_has_ubound {R : realType} (A : set R) : compact A -> has_ubound A.
-Proof.
-move=> /compact_bounded[u [_ /= uA]].
-exists (u + 1) => x Ax.
-by rewrite (le_trans (ler_norm x))// uA// ltrDl.
-Qed.
-
-(* TODO: PR *)
-Lemma cont_within_cont_comp {R : realType} {W : normedModType R} (f : W -> R)
-  (K : set R) (g : continuousSubspaceType K [set: W]) : {in g @` K, continuous f} ->
-  {within K, continuous (f \o g)}.
-Proof.
-move=> ctf.
-rewrite continuous_subspace_in => /= x Kx.
-apply: continuous_comp; first exact: continuous_fun.
-apply: ctf.
-exact: image_f Kx.
-Qed.
-
 Lemma normr_has_sup {R : realType} {K : set R} {W : normedModType R}
     (f : continuousSubspaceType K [set: W]) : compact K ->
   K !=set0 -> has_sup [set (normr \o f) z | z in K ].
@@ -718,7 +630,7 @@ Proof.
 move=> compactK [c Kc].
 split; first by exists `|f c|, c.
 apply/compact_has_ubound/continuous_compact => //.
-by apply:cont_within_cont_comp => w wK; exact: norm_continuous.
+by apply: cont_within_cont_comp => w wK; exact: norm_continuous.
 Qed.
 
 Definition pre_infty_norm {R : realType} (K : set R) {W : normedModType R}

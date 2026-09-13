@@ -4,8 +4,8 @@ From mathcomp Require Import interval_inference.
 From mathcomp Require Import boolp classical_sets functions filter reals.
 From mathcomp Require Import topology normedtype landau.
 From mathcomp Require Import sequences derive realfun.
-Require Import ssr_ext euclidean rigid frame skew derive_matrix.
-Require Import tilt_mathcomp tilt_analysis tilt_robot ode_local.
+From robot Require Import ssr_ext euclidean rigid frame skew derive_matrix.
+Require Import tilt_analysis tilt_robot ode_local.
 
 (**md**************************************************************************)
 (* # Elements of stability theory                                             *)
@@ -227,21 +227,6 @@ rewrite solx /= ?inE// => <-.
 by rewrite (ode_common.in_eq_derive1 _ solx (mem_set mD)) ?derive1_cst.
 Qed.
 
-(* assuming solution exists for all time *)
-(* Definition is_global_time_stable_at (x : U) := *)
-(*   forall eps, eps > 0 -> exists2 d, d > 0 & *)
-(*   forall f, f 0 \in Init -> sol_is_deriv_c0y phi f -> *)
-(*     `| f 0 - x | < d -> forall t, 0 <= t -> `| f t - x | < eps. *)
-
-(* Lemma stable_global_time : is_stable_at `<=` is_global_time_stable_at. *)
-(* Proof. *)
-(* move=> x H e /H [d d0 stable]. *)
-(* exists d => // z0 z0Init zglob zd /= t t0. *)
-(* apply: (stable _ (t + 1)) => //. *)
-(*   exact: sol_is_deriv_c0yco. *)
-(* by rewrite in_itv/= t0/= ltrDl. *)
-(* Qed. *)
-
 (* TODO: not used *)
 Definition is_asymptotically_stable_at (x : U) (f : R -> U) : Prop :=
   exists2 d, d > 0 & `| f 0 - x | < d -> f t @[t --> +oo] --> x.
@@ -309,7 +294,7 @@ Hypothesis DV_le0 : forall D f, f 0 \in Init ->
   is_sol_cauchy_oo (fun=> phi) 0 D (f 0) f ->
   forall t, t \in `]0, D[%R -> 'D~(f) V t <= 0.
 
-(* khalil theorem 4.1 *)
+(* Khalil thm 4.1 *)
 Theorem Lyapunov_stability0 :
   is_Lyapunov_candidate V A 0 -> is_stable_at phi Init 0.
 Proof.
@@ -326,7 +311,7 @@ have [r [r_gt0 r_eps BrD]] : exists r : R, [/\ 0 < r, r <= eps & B r `<=` A].
     rewrite /ball/= sub0r normrN gtr0_norm// gt_min.
     by rewrite gtr_pMr ?invf_lt1 ?ltr1n.
   move: Brv; rewrite BE ?divr_gt0//.
-  exact: subset_closure_half(*TODO: naming seems off, report*).
+  exact: subset_closure_half. (*TODO: naming seems off, report*)
 rewrite {xInit}.
 have alpha_min : {x : 'rV[R]_n.+1 | x \in sphere r /\
     forall y, y \in sphere r -> V x <= V y}.
@@ -593,7 +578,6 @@ Theorem Lyapunov_stability :
   is_Lyapunov_candidate V A `<=` is_stable_at phi Init.
 Proof.
 move=> x VInitx.
-(* TODO: renaming Init <-> A*)
 apply: is_stable_at_substitution.
 pose A' := [set y - x | y in A].
 have openA' : open A'.
@@ -605,9 +589,9 @@ have openA' : open A'.
   apply: open_comp => // z _.
   rewrite /continuous_at.
   apply: (@cvgD _ 'rV_n.+1) => //=.
-    by apply: filter_filter; exact: mx_nbhs_filter. (* TODO: should be automatic! *)
+    by apply: filter_filter; exact: mx_nbhs_filter.
   by apply: cvg_cst; apply: filter_filter; exact: mx_nbhs_filter.
-apply: (@Lyapunov_stability0 _ _ _ _ openA' _ (fun y => V (y + x))) => //.
+apply: (@Lyapunov_stability0 _ _ _ _ _ openA' (fun y => V (y + x))) => //.
 - by move=> t; exact: differentiable_comp.
 - move=> /= D sol sol0Init solp /= t t0D.
   rewrite [leLHS](_ : _ =  ('D~((fun y => y + x) \o sol) V) t).
