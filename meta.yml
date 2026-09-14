@@ -44,9 +44,14 @@ tested_rocq_opam_versions:
 dependencies:
 - opam:
     name: rocq-core
-    version: '{ (>= "9.1" & < "9.4~") | (= "dev") }'
+    version: '{ (>= "9.0" & < "9.4~") | (= "dev") }'
   description: |-
     Rocq core
+- opam:
+    name: rocq-stdlib
+    version: '{ (>= "9.0" & < "9.4~") | (= "dev") }'
+  description: |-
+    Rocq Stdlib
 - opam:
     name: rocq-hierarchy-builder
     version: '{ (>= "1.10.0") }'
