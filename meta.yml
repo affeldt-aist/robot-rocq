@@ -51,7 +51,7 @@ dependencies:
     Rocq core
 - opam:
     name: rocq-stdlib
-    version: '{ (>= "9.1" & < "9.4~") }'
+    version: '{ (>= "9.0" & < "9.4~") }'
   description: |-
     Rocq Stdlib
 - opam:
