@@ -6,8 +6,8 @@ Follow the instructions on https://github.com/coq-community/templates to regener
 
 [![Docker CI][docker-action-shield]][docker-action-link]
 
-[docker-action-shield]: https://github.com/affeldt-aist/robot/actions/workflows/docker-action.yml/badge.svg?branch=master
-[docker-action-link]: https://github.com/affeldt-aist/robot/actions/workflows/docker-action.yml
+[docker-action-shield]: https://github.com/affeldt-aist/robot-rocq/actions/workflows/docker-action.yml/badge.svg?branch=master
+[docker-action-link]: https://github.com/affeldt-aist/robot-rocq/actions/workflows/docker-action.yml
 
 
 
@@ -54,8 +54,8 @@ libraries this development depends on are installed.  The easiest way to do that
 is still to rely on opam:
 
 ``` shell
-git clone https://github.com/affeldt-aist/robot.git
-cd robot
+git clone https://github.com/affeldt-aist/robot-rocq.git
+cd robot-rocq
 opam repo add rocq-released https://rocq-prover.org/opam/released
 opam install --deps-only .
 make   # or make -j <number-of-cores-on-your-machine> 
