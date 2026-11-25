@@ -43,8 +43,8 @@ Module ContSeg_zlmodType.
 Section contSeg_zlmodtype.
 Context {R : realType} (K : set R) (V : normedModType R).
 
-HB.instance Definition _ := GRing.isZmodClosed.Build _ _
-  (contseg_zmod_closed K V).
+HB.instance Definition _ := GRing.isZmodClosed.Build _
+  (contseg K) (contseg_zmod_closed K V).
 
 Fail Check continuousSubspaceType K [set: V] : zmodType.
 
@@ -58,10 +58,10 @@ HB.instance Definition _ := GRing.isScaleClosed.Build _ _
 
 Fail Check @continuousSubspaceType R V K [set: V] : lmodType _.
 
-(*HB.instance Definition _ :=
-  [SubZmodule_isSubLmodule of continuousSubspaceType K [set: V] by <:].*)
 HB.instance Definition _ :=
-  [SubNmodule_isSubLSemiModule of continuousSubspaceType K [set: V] by <:].
+  [SubZmodule_isSubLmodule of continuousSubspaceType K [set: V] by <:].
+(*HB.instance Definition _ :=
+  [SubNmodule_isSubLSemiModule of continuousSubspaceType K [set: V] by <:].*)
 
 Check continuousSubspaceType K [set: V] : lmodType _.
 
@@ -146,6 +146,7 @@ rewrite image_comp/=; congr (sup _).
 apply: eq_imagel => z Kz /=; rewrite -normrMn /=.
 have /(congr1 (@^~ z)) <- := natmulfctE f n.
 congr (normr (_ z)).
+(* NB: investigate *)
 elim: n f => //= n IH f.
 by rewrite !mulrS -IH.
 Qed.
@@ -335,6 +336,7 @@ apply/propext; split => [[x1 in_itv] | [x1 in_itv]] H; exists x1 =>//.
   by rewrite -normrN.
 by rewrite normrN.
 Qed.
+(* TODO: dev the theory of sup following the theory of ess_sup *)
 
 Fail Check `C[a, b] : normedZmodType R.
 
@@ -409,9 +411,41 @@ Fail Check `C([r, s] W) : pseudoMetricNormedZmodType R.
 
 HB.instance Definition _ := is_normZmod_contFunBallType.
 
-Check `C([r, s] W) : PseudoMetricNormedZmod0.type R.
+Check `C([r, s] W) : PseudoMetricNormedZmodule.type R.
 
 HB.instance Definition _ := isPseudoMetricNormedZmodule.Build R `C([r, s] W).
+
+Check `C([r, s] W) : zmodType.
+
+Check `C([r, s] W) : uniformType.
+
+Check `C([r, s] W) : PreUniformZmodule .type.
+
+Lemma countFunBallType_add_unif_continuous (M := `C([r, s] W) ) :
+  unif_continuous (fun x : M * M => x.1 + x.2).
+Proof.
+exact: PseudoMetricNormedZmodule_add_unif_continuous.
+Qed.
+
+HB.instance Definition _ := PreUniformNmodule_isUniformNmodule.Build `C([r, s] W)
+  countFunBallType_add_unif_continuous.
+
+Check `C([r, s] W) : UniformNmodule.type.
+
+Fail Check `C([r, s] W) : UniformZmodule.type.
+
+Lemma countFunBallType_unif_continuous (M := `C([r, s] W) ) :
+  unif_continuous ( -%R : M -> M).
+Proof.
+exact: PseudoMetricNormedZmodule_opp_unif_continuous.
+Qed.
+
+HB.instance Definition _ := UniformNmodule_isUniformZmodule.Build `C([r, s] W)
+  countFunBallType_unif_continuous.
+
+Check `C([r, s] W) : UniformZmodule.type.
+
+Check `C([r, s] W) : topologicalZmodType.
 
 Check `C([r, s] W) : pseudoMetricNormedZmodType R.
 

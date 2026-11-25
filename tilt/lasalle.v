@@ -44,7 +44,7 @@ Proof. by rewrite -mulr2n mulr_natl. Qed.
 Section pseudoMetricType_numDomainType.
 Context {R : numDomainType} {M : pseudoMetricType R}.
 
-Definition ball_set (A : set M) e := \bigcup_(p in A) ball p e.
+Definition ball_set (A : set M) e : set M := \bigcup_(p in A) ball p e.
 
 (*HB.instance Definition _ := isPointed.Build (set M) [set point].*)
 
@@ -228,7 +228,7 @@ Definition is_invariant {R : realType} {U : normedModType R} (f : U -> R -> U)
 
 Theorem cvg_to_limS {R : realType} {U : normedModType R} (sol : U -> R -> U)
     (A : set U) : compact A -> is_invariant sol A ->
-  forall p, A p -> sol p @ +oo%R --> (limS sol A : set U).
+  forall p, A p -> sol p t @[t --> +oo%R] --> (limS sol A : set U).
 Proof.
 move=> Aco Ainvar p Ap B [_/posnumP[e] limSeB].
 apply: (cvg_to_plim _ Aco).
@@ -468,8 +468,8 @@ suff : exists l, cluster (sol q @ +oo%R) `<=` V @^-1` [set l].
   move=> [l Vpliml]/=; rewrite derive1E /derive cvg_at_rightE.
     apply: Vsol_drvbl => //; apply: compact_closed => //.
     exact: sub_plim_clos_invar plimp.
-  apply: (@cvg_lim _ _ _ (at_right _)) => // A A0.
-  rewrite !near_simpl; near=> h.
+  apply/cvg_lim => // A A0.
+  rewrite 2!near_simpl; near=> h.
   rewrite /= sol0 addr0.
   rewrite [X in sol p X](_ : _ = h); first by rewrite scaler1.
   rewrite Vpliml//.

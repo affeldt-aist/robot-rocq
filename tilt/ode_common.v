@@ -271,7 +271,6 @@ HB.instance Definition _ x := isContinuous.Build (subspace A) W
 
 End cst_continuous_on_subspace.
 
-(* NB: continuousFunType is defined in subspace_topology.v *)
 HB.instance Definition _ (R : realType) (V : topologicalType) (A : set R) :=
   gen_eqMixin (continuousSubspaceType A [set: V]).
 
@@ -298,8 +297,9 @@ Context (f : R -> V) (fP : f \in contseg A).
 
 Definition contseg_Sub_subproof := unsquash (set_mem fP).
 #[local] HB.instance Definition _ := contseg_Sub_subproof.
+
 Definition contseg_Sub : continuousSubspaceType A [set: V] :=
-  {| ContinuousSubspace.sort := f; ContinuousSubspace.class := contseg_Sub_subproof |}.
+  @ContinuousSubspace.Pack _ _ _ _ f contseg_Sub_subproof.
 
 End Sub.
 
@@ -332,8 +332,7 @@ Definition contsegN {R : realType} (K : set R) (g : R -> R) :=
 Arguments contsegN {R} _ _.
 
 Section contsegN.
-Context {R : realType}.
-Variables K : set R.
+Context {R : realType} (K : set R).
 
 Let g'fun (g : continuousSubspaceType K [set: R]) :
   set_fun (-%R @` K) setT (contsegN K g).

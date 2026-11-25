@@ -494,27 +494,8 @@ rewrite -ler_pdivlMr ?expR_gt0//.
 have: ball u (e /  expR (k'%:num * t)) v.
   near: v.
   have gt0 : 0 < e / expR (k'%:num * t) by rewrite !divr_gt0// expR_gt0.
-  have [F/= mF Fu] := near_ball u _ gt0.
-  red.
-  red.
-  simpl.
-  red.
-  simpl.
-  red.
-  simpl.
-  red.
-  rewrite uUpsilon1//.
-  red.
-  simpl.
-  red.
-  red.
-  simpl.
-  red.
-  simpl.
-  red.
-  simpl.
-  exists F => //= x/= Hx px.
-  by apply: Fu.
+  rewrite !nbhs_simpl nearE /nbhs_subspace uUpsilon1.
+  exact: filterS (near_ball u _ gt0).
 by rewrite -ball_normE/= => /ltW.
 Unshelve. all: by end_near. Qed.
 
@@ -836,7 +817,7 @@ have sublevelUpsilon1q : sublevelV1Upsilon1 p q.
   apply/invariant_sublevelUpsilon1 => //.
   exact/set_mem/mem_sublevelV1Upsilon1/set_mem.
 have [M [Mr Mp]] : bounded_set (sublevelV1Upsilon1 p).
-  apply compact_bounded.
+  apply: compact_bounded.
   exact: compact_sublevelV1Upsilon1.
 have [M0 | M0] := leP 0 M; last first.
   suff : `|q| < 0 by rewrite normr_lt0.

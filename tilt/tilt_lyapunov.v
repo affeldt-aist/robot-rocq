@@ -76,9 +76,6 @@ move=> derivableR derivablep derivableDp.
 rewrite mulmxDl.
 rewrite /y_a/= /= /x2.
 congr +%R; last by rewrite scalemxAl.
-rewrite -ang_vel_mxE/=.
-  by move=> ?; rewrite rotation_sub.
-  exact: derivableR.
 rewrite [in RHS]derive_mulmx => //.
 rewrite derive1mx_ang_vel//; first by move=> ?; rewrite rotation_sub.
 rewrite ang_vel_mxE//; first by move=> ?; rewrite rotation_sub.

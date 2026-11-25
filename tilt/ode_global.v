@@ -1273,7 +1273,7 @@ rewrite /Rintegral (@continuous_FTC2 _ _ (fun x => - mu / k * expR (k * (t - x))
     by move=> ? ?; exact: continuous_expR.
   apply/within_continuousMl => //=; apply/within_continuousB => //=.
     exact: cst_within_continuous.
-  by apply: continuous_subspaceT => x; exact: cvg_id.
+  by apply: continuous_subspaceT => x; exact: cvg_id. (* TODO: id_continuous lemma *)
 - split => //=.
   + apply: cvg_at_right_filter; apply: cvgMl_tmp.
     apply: (@cvg_comp _ _ _ _ expR _ (nbhs (k * (t - a)))) => //; last first.
